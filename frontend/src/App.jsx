@@ -89,7 +89,7 @@ function App() {
     <div className="bg-gray-200 flex items-center justify-center h-screen">
       <div className="flex flex-col bg-white p-8 rounded shadow-md w-[634px] min-h-[200px]">
         <h1 className="text-center text-2xl font-bold mb-4 text-gray-800">
-          Deposit/Withdraw ETH22
+          Deposit/Withdraw ETH
         </h1>
         {walletAddress && (
           <div className="text-center text-gray-700 mb-4">
