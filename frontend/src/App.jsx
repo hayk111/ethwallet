@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import classNames from 'classnames';
 import Loader from './components/Loader';
 import { fetchBalanceAPI, depositAPI, withdrawAPI } from './api';
 
 function App() {
+  const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(false);
   const [walletAddress, setWalletAddress] = useState('');
   const [amount, setAmount] = useState('');
   const [message, setMessage] = useState('');
@@ -12,6 +14,7 @@ function App() {
 
   useEffect(() => {
     if (typeof window.ethereum !== 'undefined') {
+      setIsMetaMaskInstalled(true);
       console.log('MetaMask is installed!');
     } else {
       setMessage('Please install MetaMask to use this app.');
@@ -41,6 +44,10 @@ function App() {
   };
 
   const handleDeposit = async () => {
+    if (amount <= 0) {
+      setMessage('Amount must be greater than 0');
+      return;
+    }
     setDepositLoading(true);
     try {
       const data = await depositAPI(walletAddress, amount);
@@ -48,7 +55,7 @@ function App() {
       setBalance(data.balance);
     } catch (error) {
       if (!error.message) {
-        setMessage('Somthing went wrong with the deposit');
+        setMessage('Something went wrong with the deposit');
         return;
       }
       setMessage(`Error: ${error.message}`);
@@ -58,6 +65,10 @@ function App() {
   };
 
   const handleWithdraw = async () => {
+    if (amount <= 0) {
+      setMessage('Amount must be greater than 0');
+      return;
+    }
     setWithdrawLoading(true);
     try {
       const data = await withdrawAPI(walletAddress, amount);
@@ -65,7 +76,7 @@ function App() {
       setBalance(data.balance);
     } catch (error) {
       if (!error.message) {
-        setMessage('Somthing went wrong with the withdrawal');
+        setMessage('Something went wrong with the withdrawal');
         return;
       }
       setMessage(`Error: ${error.message}`);
@@ -86,7 +97,7 @@ function App() {
             {balance !== null ? `${balance} ETH` : 'Loading...'}
           </div>
         )}
-        {!walletAddress ? (
+        {!walletAddress && isMetaMaskInstalled && (
           <div className="flex justify-center mt-auto">
             <button
               onClick={connectMetaMask}
@@ -95,7 +106,8 @@ function App() {
               Connect MetaMask
             </button>
           </div>
-        ) : (
+        )}
+        {walletAddress && isMetaMaskInstalled && (
           <>
             <div className="mb-4">
               <label htmlFor="amount" className="block text-gray-700">
@@ -103,9 +115,9 @@ function App() {
               </label>
               <input
                 id="amount"
-                type="number"
+                type="text"
                 className="w-full px-3 py-2 border border-gray-300 rounded"
-                placeholder="0.1"
+                placeholder="0"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
               />
@@ -113,7 +125,13 @@ function App() {
             <div className="flex justify-between">
               <button
                 onClick={handleDeposit}
-                className="bg-gray-300 text-gray-800 px-4 py-2 rounded flex items-center justify-center"
+                className={classNames(
+                  'bg-gray-300 text-gray-800 px-4 py-2 rounded flex items-center justify-center',
+                  {
+                    'opacity-50 cursor-not-allowed':
+                      depositLoading || withdrawLoading,
+                  }
+                )}
                 disabled={depositLoading || withdrawLoading}
               >
                 {depositLoading ? (
@@ -127,7 +145,13 @@ function App() {
               </button>
               <button
                 onClick={handleWithdraw}
-                className="bg-gray-900 text-white px-4 py-2 rounded flex items-center justify-center"
+                className={classNames(
+                  'bg-gray-900 text-white px-4 py-2 rounded flex items-center justify-center',
+                  {
+                    'opacity-50 cursor-not-allowed':
+                      depositLoading || withdrawLoading,
+                  }
+                )}
                 disabled={depositLoading || withdrawLoading}
               >
                 {withdrawLoading ? (
