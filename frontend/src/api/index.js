@@ -1,4 +1,5 @@
-const API_URL = 'http://localhost:3000/api/users';
+const API_URL = `${import.meta.env.VITE_API_URL}/api`;
+console.log('🚀 ~ API_URL:', API_URL);
 
 export const fetchBalanceAPI = async (address) => {
   const response = await fetch(`${API_URL}/${address}`);
