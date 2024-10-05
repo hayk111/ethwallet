@@ -19,7 +19,7 @@ mongoose
   .then(() => console.log('MongoDB connected'))
   .catch((err) => console.log(err));
 
-app.use('/api/users', userRoutes);
+app.use('/api', userRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
