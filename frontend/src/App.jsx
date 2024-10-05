@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import classNames from 'classnames';
 import Loader from './components/Loader';
-import { fetchBalanceAPI, depositAPI, withdrawAPI } from './api';
+import {
+  fetchBalanceAPI,
+  depositAPI,
+  withdrawAPI,
+  createUserWalletAPI,
+  getUserWalletAPI,
+} from './api';
 
 function App() {
   const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(false);
@@ -20,6 +26,31 @@ function App() {
       setMessage('Please install MetaMask to use this app.');
     }
   }, []);
+
+  useEffect(() => {
+    const createWalletIfNotExists = async (walletAddress) => {
+      let wallet = null;
+      try {
+        wallet = await getUserWalletAPI(walletAddress);
+      } catch (error) {
+        console.error(error);
+      }
+      if (!!wallet) {
+        return;
+      }
+      try {
+        const data = await createUserWalletAPI(walletAddress);
+        setBalance(data.balance);
+        setMessage(`User wallet created: ${data.walletAddress}`);
+      } catch (error) {
+        setMessage(`Error creating user wallet: ${error.message}`);
+      }
+    };
+
+    if (walletAddress) {
+      createWalletIfNotExists(walletAddress);
+    }
+  }, [walletAddress]);
 
   const connectMetaMask = async () => {
     try {
