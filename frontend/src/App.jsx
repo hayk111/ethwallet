@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Loader from './components/Loader';
+import { fetchBalanceAPI, depositAPI, withdrawAPI } from './api';
 
 function App() {
   const [walletAddress, setWalletAddress] = useState('');
@@ -32,14 +33,7 @@ function App() {
 
   const fetchBalance = async (address) => {
     try {
-      const response = await fetch(
-        `http://localhost:3000/api/users/${address}`
-      );
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message);
-      }
-      const data = await response.json();
+      const data = await fetchBalanceAPI(address);
       setBalance(data.balance);
     } catch (error) {
       setMessage(`Error fetching balance: ${error.message}`);
@@ -49,23 +43,14 @@ function App() {
   const handleDeposit = async () => {
     setDepositLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/api/users/deposit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ walletAddress, amount }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message);
-      }
-
-      const data = await response.json();
+      const data = await depositAPI(walletAddress, amount);
       setMessage(`Deposit successful! New balance: ${data.balance} ETH`);
       setBalance(data.balance);
     } catch (error) {
+      if (!error.message) {
+        setMessage('Somthing went wrong with the deposit');
+        return;
+      }
       setMessage(`Error: ${error.message}`);
     } finally {
       setDepositLoading(false);
@@ -75,23 +60,14 @@ function App() {
   const handleWithdraw = async () => {
     setWithdrawLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/api/users/withdraw', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ walletAddress, amount }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message);
-      }
-
-      const data = await response.json();
+      const data = await withdrawAPI(walletAddress, amount);
       setMessage(`Withdrawal successful! New balance: ${data.balance} ETH`);
       setBalance(data.balance);
     } catch (error) {
+      if (!error.message) {
+        setMessage('Somthing went wrong with the withdrawal');
+        return;
+      }
       setMessage(`Error: ${error.message}`);
     } finally {
       setWithdrawLoading(false);
