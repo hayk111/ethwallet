@@ -25,15 +25,15 @@ This project is a simple application that allows users to connect their MetaMask
 
 ### Backend Setup
 
-1. **Navigate to the backend directory**:
+1. **Navigate to the server directory**:
 
 ```bash
-  cd backend
+  cd server
 ```
 
 2. Install dependencies:
 ```bash
-  yarn install
+  yarn
 ```
 3. Start MongoDB:
 ```bash
@@ -41,7 +41,7 @@ This project is a simple application that allows users to connect their MetaMask
 ```
 3. Run the server:
 ```bash
-  node server.js
+  node app.js
 ```
 
 ### Frontend Setup
@@ -54,10 +54,14 @@ This project is a simple application that allows users to connect their MetaMask
 
 2. Install dependencies:
 ```bash
-  yarn install
+  yarn
 ```
 
 3. Run the development server:
 ```bash
   yarn dev
 ```
+
+### App is deployed with Vercel
+
+https://ethwallet-mocha.vercel.app/
