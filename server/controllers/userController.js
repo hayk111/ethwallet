@@ -51,32 +51,6 @@ exports.getUser = async (req, res) => {
   }
 };
 
-exports.deposit = async (req, res) => {
-  const { walletAddress, amount } = req.body;
-  try {
-    const user = await User.findOne({ walletAddress });
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    // Interact with the smart contract to deposit
-    const contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS);
-    await contract.methods.deposit().send({
-      from: walletAddress,
-      value: web3.utils.toWei(amount.toString(), 'ether'),
-    });
-
-    user.balance += parseFloat(amount);
-    await user.save();
-    res.status(200).json(user);
-  } catch (error) {
-    console.error('Error during deposit:', error);
-    if (error.message.includes('insufficient funds')) {
-      res.status(400).json({ error: 'Insufficient funds for deposit' });
-    } else {
-      res.status(500).json({ error: 'Internal server error during deposit' });
-    }
-  }
-};
-
 exports.withdraw = async (req, res) => {
   const { walletAddress, amount } = req.body;
   try {
