@@ -76,8 +76,8 @@ function App() {
   };
 
   const handleDeposit = async () => {
-    if (typeof window.ethereum === 'undefined') {
-      setMessage('MetaMask is not installed.');
+    if (amount <= 0) {
+      setMessage('Amount must be greater than 0');
       return;
     }
 
