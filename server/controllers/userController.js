@@ -18,7 +18,7 @@ const options = {
 };
 
 const web3 = new Web3(
-  new Web3.providers.WebsocketProvider(process.env.ALCHEMY_NODE_URL, options)
+  new Web3.providers.HttpProvider(process.env.ALCHEMY_NODE_URL, options)
 );
 
 const ABI = JSON.parse(process.env.ABI);

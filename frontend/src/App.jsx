@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import classNames from 'classnames';
+import Web3 from 'web3';
 import Loader from './components/Loader';
 import {
   fetchBalanceAPI,
-  depositAPI,
   withdrawAPI,
   createUserWalletAPI,
   getUserWalletAPI,
 } from './api';
+
+const contractABI = JSON.parse(import.meta.env.VITE_CONTRACT_ABI);
+const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
 
 function App() {
   const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(false);
@@ -15,7 +18,6 @@ function App() {
   const [amount, setAmount] = useState('');
   const [message, setMessage] = useState('');
   const [balance, setBalance] = useState(null);
-  const [depositLoading, setDepositLoading] = useState(false);
   const [withdrawLoading, setWithdrawLoading] = useState(false);
 
   useEffect(() => {
@@ -58,7 +60,6 @@ function App() {
         method: 'eth_requestAccounts',
       });
       setWalletAddress(accounts[0]);
-      setMessage(`Connected with wallet: ${accounts[0]}`);
       fetchBalance(accounts[0]);
     } catch (error) {
       setMessage(`Error connecting to MetaMask: ${error.message}`);
@@ -75,23 +76,38 @@ function App() {
   };
 
   const handleDeposit = async () => {
-    if (amount <= 0) {
-      setMessage('Amount must be greater than 0');
+    if (typeof window.ethereum === 'undefined') {
+      setMessage('MetaMask is not installed.');
       return;
     }
-    setDepositLoading(true);
+
     try {
-      const data = await depositAPI(walletAddress, amount);
-      setMessage(`Deposit successful! New balance: ${data.balance} ETH`);
-      setBalance(data.balance);
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const web3 = new Web3(window.ethereum);
+
+      const accounts = await web3.eth.getAccounts();
+      const walletAddress = accounts[0];
+
+      const contract = new web3.eth.Contract(contractABI, contractAddress);
+      const depositAmount = web3.utils.toWei(amount, 'ether');
+
+      contract.methods
+        .deposit()
+        .send({
+          from: walletAddress,
+          value: depositAmount,
+        })
+        .on('transactionHash', (hash) => {
+          setMessage(`Transaction sent! Hash: ${hash}`);
+        })
+        .on('receipt', (receipt) => {
+          setMessage(`Deposit successful! New balance: ${receipt}`);
+        })
+        .on('error', (error) => {
+          setMessage(`Error during deposit: ${error.message}`);
+        });
     } catch (error) {
-      if (!error.message) {
-        setMessage('Something went wrong with the deposit');
-        return;
-      }
       setMessage(`Error: ${error.message}`);
-    } finally {
-      setDepositLoading(false);
     }
   };
 
@@ -123,10 +139,12 @@ function App() {
           Deposit/Withdraw ETH
         </h1>
         {walletAddress && (
-          <div className="text-center text-gray-700 mb-4">
-            <strong>Wallet Balance:</strong>{' '}
-            {balance !== null ? `${balance} ETH` : 'Loading...'}
-          </div>
+          <>
+            <div className="text-center text-gray-700 mb-4">
+              <strong>Wallet Balance:</strong>{' '}
+              {balance !== null ? `${balance} ETH` : 'Loading...'}
+            </div>
+          </>
         )}
         {!walletAddress && isMetaMaskInstalled && (
           <div className="flex justify-center mt-auto">
@@ -159,31 +177,22 @@ function App() {
                 className={classNames(
                   'bg-gray-300 text-gray-800 px-4 py-2 rounded flex items-center justify-center',
                   {
-                    'opacity-50 cursor-not-allowed':
-                      depositLoading || withdrawLoading,
+                    'opacity-50 cursor-not-allowed': withdrawLoading,
                   }
                 )}
-                disabled={depositLoading || withdrawLoading}
+                disabled={withdrawLoading}
               >
-                {depositLoading ? (
-                  <span className="flex items-center">
-                    <Loader />
-                    Depositing...
-                  </span>
-                ) : (
-                  'Deposit'
-                )}
+                Deposit
               </button>
               <button
                 onClick={handleWithdraw}
                 className={classNames(
                   'bg-gray-900 text-white px-4 py-2 rounded flex items-center justify-center',
                   {
-                    'opacity-50 cursor-not-allowed':
-                      depositLoading || withdrawLoading,
+                    'opacity-50 cursor-not-allowed': withdrawLoading,
                   }
                 )}
-                disabled={depositLoading || withdrawLoading}
+                disabled={withdrawLoading}
               >
                 {withdrawLoading ? (
                   <span className="flex items-center">
@@ -197,7 +206,12 @@ function App() {
             </div>
           </>
         )}
-        <div className="mt-10 text-center text-gray-700">{message}</div>
+        <div className="mt-6 text-center text-gray-700">{message}</div>
+        {walletAddress && (
+          <div className="mt-6 text-center text-gray-700 text-sm">
+            Connected with wallet: <b>{walletAddress}</b>
+          </div>
+        )}
       </div>
     </div>
   );
