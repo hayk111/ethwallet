@@ -4,11 +4,9 @@ const { Web3 } = require('web3');
 const options = {
   timeout: 30000, // ms
   clientConfig: {
-    // Useful if requests are large
     maxReceivedFrameSize: 100000000, // bytes - default: 1MiB
     maxReceivedMessageSize: 100000000, // bytes - default: 8MiB
   },
-  // Enable auto reconnection
   reconnect: {
     auto: true,
     delay: 5000, // ms

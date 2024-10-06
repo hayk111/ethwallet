@@ -8,7 +8,6 @@ const userRoutes = require('./routes/userRoutes');
 const app = express();
 app.use(express.json());
 
-//enable cors
 app.use(cors());
 
 mongoose
