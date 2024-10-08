@@ -25,7 +25,9 @@ const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
 exports.createUser = async (req, res) => {
   const { walletAddress } = req.body;
   try {
-    let user = await User.findOne({ walletAddress });
+    let user = await User.findOne({
+      walletAddress: new RegExp(`^${walletAddress}$`, 'i'),
+    });
     if (!user) {
       user = new User({ walletAddress });
       await user.save();
@@ -40,7 +42,9 @@ exports.createUser = async (req, res) => {
 exports.getUser = async (req, res) => {
   const { walletAddress } = req.params;
   try {
-    const user = await User.findOne({ walletAddress });
+    const user = await User.findOne({
+      walletAddress: new RegExp(`^${walletAddress}$`, 'i'),
+    });
     if (!user) return res.status(404).json({ message: 'User not found' });
     res.status(200).json(user);
   } catch (error) {
@@ -49,10 +53,29 @@ exports.getUser = async (req, res) => {
   }
 };
 
+exports.deposit = async (req, res) => {
+  const { walletAddress, amount } = req.body;
+  try {
+    const user = await User.findOne({
+      walletAddress: new RegExp(`^${walletAddress}$`, 'i'),
+    });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.balance += parseFloat(amount.replace(',', '.'));
+    await user.save();
+    res.status(200).json(user);
+  } catch (error) {
+    console.error('Error during deposit:', error);
+    res.status(500).json({ error: 'Internal server error during deposit' });
+  }
+};
+
 exports.withdraw = async (req, res) => {
   const { walletAddress, amount } = req.body;
   try {
-    const user = await User.findOne({ walletAddress });
+    const user = await User.findOne({
+      walletAddress: new RegExp(`^${walletAddress}$`, 'i'),
+    });
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     if (user.balance < amount)
@@ -64,7 +87,7 @@ exports.withdraw = async (req, res) => {
       .withdraw(web3.utils.toWei(amount.toString(), 'ether'))
       .send({ from: walletAddress });
 
-    user.balance -= parseFloat(amount);
+    user.balance -= parseFloat(amount.replace(',', '.'));
     await user.save();
     res.status(200).json(user);
   } catch (error) {

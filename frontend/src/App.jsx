@@ -7,6 +7,7 @@ import {
   withdrawAPI,
   createUserWalletAPI,
   getUserWalletAPI,
+  depositAPI,
 } from './api';
 
 const contractABI = JSON.parse(import.meta.env.VITE_CONTRACT_ABI);
@@ -34,6 +35,7 @@ function App() {
       let wallet = null;
       try {
         wallet = await getUserWalletAPI(walletAddress);
+        setBalance(wallet.balance);
       } catch (error) {
         console.error(error);
       }
@@ -100,8 +102,15 @@ function App() {
         .on('transactionHash', (hash) => {
           setMessage(`Transaction sent! Hash: ${hash}`);
         })
-        .on('receipt', (receipt) => {
-          setMessage(`Deposit successful! New balance: ${receipt}`);
+        .on('receipt', async (receipt) => {
+          try {
+            await depositAPI(walletAddress, amount).then((data) => {
+              setBalance(data.balance);
+            });
+            setMessage('Deposit successful!');
+          } catch (error) {
+            setMessage(`Error: ${error.message}`);
+          }
         })
         .on('error', (error) => {
           setMessage(`Error during deposit: ${error.message}`);
